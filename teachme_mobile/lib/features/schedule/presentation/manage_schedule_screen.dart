@@ -423,8 +423,8 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen>
               loading: () => ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: 4,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (_, __) => const SkeletonLoader(
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (_, _) => const SkeletonLoader(
                   width: 88,
                   height: 56,
                   borderRadius: Radii.md,
@@ -456,7 +456,7 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen>
                 return ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: sorted.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
                   itemBuilder: (_, index) => _slotPill(sorted[index], theme),
                 );
               },
@@ -497,7 +497,7 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen>
 }
 
 class _RuleSheet extends ConsumerStatefulWidget {
-  const _RuleSheet({super.key, this.existing});
+  const _RuleSheet({this.existing});
 
   final AvailabilityRuleDto? existing;
 
@@ -670,7 +670,7 @@ class _RuleSheetState extends ConsumerState<_RuleSheet> {
 }
 
 class _ExceptionSheet extends ConsumerStatefulWidget {
-  const _ExceptionSheet({super.key});
+  const _ExceptionSheet();
 
   @override
   ConsumerState<_ExceptionSheet> createState() => _ExceptionSheetState();

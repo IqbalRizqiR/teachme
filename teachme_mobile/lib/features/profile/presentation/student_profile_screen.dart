@@ -141,8 +141,9 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                           ],
                           selected: {mode},
                           onSelectionChanged: (selection) {
-                            ref.read(themeModeProvider.notifier).state =
-                                selection.first;
+                            ref
+                                .read(themeModeProvider.notifier)
+                                .setMode(selection.first);
                           },
                         ),
                       ),

@@ -29,4 +29,26 @@ class ThemePrefs {
 
 final themePrefsProvider = Provider<ThemePrefs>((ref) => ThemePrefs());
 
-final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
+class ThemeModeNotifier extends StateNotifier<ThemeMode> {
+  ThemeModeNotifier(this._prefs) : super(ThemeMode.system) {
+    _restore();
+  }
+
+  final ThemePrefs _prefs;
+
+  Future<void> _restore() async {
+    final stored = await _prefs.getThemeMode();
+    if (mounted) {
+      state = stored;
+    }
+  }
+
+  Future<void> setMode(ThemeMode mode) async {
+    state = mode;
+    await _prefs.setThemeMode(mode);
+  }
+}
+
+final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>(
+  (ref) => ThemeModeNotifier(ref.watch(themePrefsProvider)),
+);

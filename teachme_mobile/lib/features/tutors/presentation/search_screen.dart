@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:teachme_mobile/core/theme/tokens.dart';
-import 'package:teachme_mobile/core/widgets/app_button.dart';
 import 'package:teachme_mobile/core/widgets/avatar_widget.dart';
 import 'package:teachme_mobile/core/widgets/empty_state.dart';
 import 'package:teachme_mobile/core/widgets/error_state.dart';
@@ -124,8 +123,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   return ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: 4,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (_, __) => const SkeletonLoader(width: double.infinity, height: 140),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (_, _) => const SkeletonLoader(width: double.infinity, height: 140),
                   );
                 }
 
@@ -146,7 +145,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: data.items.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final tutor = data.items[index];
                     final startingPrice = tutor.subjects.isNotEmpty

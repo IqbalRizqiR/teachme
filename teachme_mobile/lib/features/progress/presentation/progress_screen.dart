@@ -1,13 +1,8 @@
-import 'dart:io';
-
-import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:teachme_mobile/core/network/dio_client.dart';
 import 'package:teachme_mobile/core/theme/tokens.dart';
 import 'package:teachme_mobile/core/widgets/animated_progress_bar.dart';
@@ -18,6 +13,7 @@ import 'package:teachme_mobile/core/widgets/skeleton_loader.dart';
 import 'package:teachme_mobile/core/widgets/status_badge.dart';
 import 'package:teachme_mobile/features/booking/data/booking_api.dart';
 import 'package:teachme_mobile/features/booking/data/booking_dto.dart';
+import 'package:teachme_mobile/features/progress/data/certificate_downloader.dart';
 import 'package:teachme_mobile/features/progress/data/progress_api.dart';
 import 'package:teachme_mobile/features/progress/data/progress_dto.dart';
 
@@ -696,19 +692,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
     }
 
     try {
-      final response = await ref.read(dioProvider).get<List<int>>(
-            '/certificates/$certificateId/download',
-            options: Options(responseType: ResponseType.bytes),
-          );
-      final bytes = response.data;
-      if (bytes == null) {
-        _showSnack('Gagal mengunduh sertifikat.');
-        return;
-      }
-      final directory = await getTemporaryDirectory();
-      final path = '${directory.path}/certificate_$certificateId.pdf';
-      await File(path).writeAsBytes(bytes);
-      await OpenFilex.open(path);
+      await saveAndOpenCertificate(
+        dio: ref.read(dioProvider),
+        certificateId: certificateId,
+      );
+      _showSnack('Sertifikat berhasil diunduh.');
     } catch (_) {
       _showSnack('Gagal mengunduh sertifikat.');
     }

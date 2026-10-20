@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:teachme_mobile/core/theme/tokens.dart';
@@ -8,6 +9,7 @@ import 'package:teachme_mobile/core/widgets/avatar_widget.dart';
 import 'package:teachme_mobile/core/widgets/empty_state.dart';
 import 'package:teachme_mobile/core/widgets/error_state.dart';
 import 'package:teachme_mobile/core/widgets/skeleton_loader.dart';
+import 'package:teachme_mobile/features/auth/domain/auth_state.dart';
 import 'package:teachme_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:teachme_mobile/features/notifications/data/notification_api.dart';
 import 'package:teachme_mobile/features/subjects/data/subject_api.dart';
@@ -149,7 +151,7 @@ class StudentHomeScreen extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       scrollDirection: Axis.horizontal,
                       itemCount: subjects.length + 1,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         final isAll = index == 0;
                         final isSelected = isAll
@@ -180,7 +182,7 @@ class StudentHomeScreen extends ConsumerWidget {
                       },
                     ),
                     loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
                   ),
                 ),
               ),
@@ -210,7 +212,7 @@ class StudentHomeScreen extends ConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 80),
                     sliver: SliverList.separated(
                       itemCount: data.items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
+                      separatorBuilder: (_, _) => const SizedBox(height: 16),
                       itemBuilder: (context, index) {
                         final tutor = data.items[index];
                         final startingPrice = tutor.subjects.isNotEmpty
@@ -346,8 +348,8 @@ class StudentHomeScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(20),
                   sliver: SliverList.separated(
                     itemCount: 3,
-                    separatorBuilder: (_, __) => const SizedBox(height: 16),
-                    itemBuilder: (_, __) => const SkeletonLoader(width: double.infinity, height: 160),
+                    separatorBuilder: (_, _) => const SizedBox(height: 16),
+                    itemBuilder: (_, _) => const SkeletonLoader(width: double.infinity, height: 160),
                   ),
                 ),
                 error: (err, _) => SliverFillRemaining(

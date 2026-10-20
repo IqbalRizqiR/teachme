@@ -128,8 +128,8 @@ class _TutorBookingsScreenState extends ConsumerState<TutorBookingsScreen> {
                 loading: () => ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: 4,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (_, __) => const SkeletonLoader(
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (_, _) => const SkeletonLoader(
                     width: double.infinity,
                     height: 140,
                     borderRadius: Radii.lg,
@@ -164,7 +164,7 @@ class _TutorBookingsScreenState extends ConsumerState<TutorBookingsScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(16),
                     itemCount: items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (_, index) =>
                         _bookingCard(items[index], theme),
                   );
