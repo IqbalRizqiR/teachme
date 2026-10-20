@@ -14,10 +14,8 @@ ThemeData buildTheme(Brightness brightness, {AppRole? role}) {
 
   final bg = dark ? const Color(0xFF141218) : const Color(0xFFFDF9FF);
   final surface = dark ? const Color(0xFF211F26) : const Color(0xFFF1ECF4);
-  // final surfaceRaised = dark ? const Color(0xFF2B2930) : const Color(0xFFFFFFFF);
   final outline = dark ? const Color(0xFF48464C) : const Color(0xFFCAC5CC);
   final text = dark ? const Color(0xFFE6E1E9) : const Color(0xFF1C1B1F);
-  // final textSecondary = dark ? const Color(0xFFCAC5CC) : const Color(0xFF48464C);
 
   final colorScheme = ColorScheme(
     brightness: brightness,
