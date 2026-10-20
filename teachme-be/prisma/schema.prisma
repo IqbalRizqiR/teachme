@@ -1,0 +1,263 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  STUDENT
+  TUTOR
+}
+
+enum SchoolLevel {
+  SMP
+  SMA
+  UNIVERSITY
+}
+
+enum SlotStatus {
+  OPEN
+  HELD
+  BOOKED
+  CLOSED
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  PAID
+  COMPLETED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  SETTLED
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  ENDED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role
+  avatarPath   String?
+  timezone     String   @default("Asia/Jakarta")
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  student       StudentProfile?
+  tutor         TutorProfile?
+  refreshTokens RefreshToken[]
+  notifications Notification[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime  @db.Timestamptz(3)
+  revokedAt DateTime? @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model StudentProfile {
+  id          String       @id @default(cuid())
+  userId      String       @unique
+  schoolLevel SchoolLevel?
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
+}
+
+model TutorProfile {
+  id          String                  @id @default(cuid())
+  userId      String                  @unique
+  bio         String?
+  isVerified  Boolean                 @default(false)
+  ratingAvg   Float                   @default(0)
+  ratingCount Int                     @default(0)
+  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjects    TutorSubject[]
+  rules       AvailabilityRule[]
+  exceptions  AvailabilityException[]
+  slots       Slot[]
+}
+
+model Subject {
+  id     String         @id @default(cuid())
+  name   String         @unique
+  slug   String         @unique
+  tutors TutorSubject[]
+}
+
+model TutorSubject {
+  id          String         @id @default(cuid())
+  tutorId     String
+  subjectId   String
+  priceIdr    Int
+  tutor       TutorProfile   @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  subject     Subject        @relation(fields: [subjectId], references: [id])
+  enrollments Enrollment[]
+
+  @@unique([tutorId, subjectId])
+  @@index([subjectId, priceIdr])
+}
+
+model AvailabilityRule {
+  id          String       @id @default(cuid())
+  tutorId     String
+  weekday     Int
+  startMinute Int
+  endMinute   Int
+  tutor       TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+
+  @@index([tutorId, weekday])
+}
+
+model AvailabilityException {
+  id      String       @id @default(cuid())
+  tutorId String
+  date    DateTime     @db.Date
+  reason  String?
+  tutor   TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+
+  @@unique([tutorId, date])
+}
+
+model Slot {
+  id       String       @id @default(cuid())
+  tutorId  String
+  startsAt DateTime     @db.Timestamptz(3)
+  endsAt   DateTime     @db.Timestamptz(3)
+  status   SlotStatus   @default(OPEN)
+  tutor    TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  booking  Booking?
+
+  @@unique([tutorId, startsAt])
+  @@index([tutorId, status, startsAt])
+}
+
+model Enrollment {
+  id             String           @id @default(cuid())
+  studentId      String
+  tutorSubjectId String
+  targetScore    Int?
+  minSessions    Int?
+  status         EnrollmentStatus @default(ACTIVE)
+  student        StudentProfile   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  tutorSubject   TutorSubject     @relation(fields: [tutorSubjectId], references: [id])
+  bookings       Booking[]
+  certificate    Certificate?
+
+  @@unique([studentId, tutorSubjectId])
+}
+
+model Booking {
+  id                  String         @id @default(cuid())
+  enrollmentId        String
+  slotId              String         @unique
+  status              BookingStatus  @default(PENDING)
+  priceIdr            Int
+  feeIdr              Int
+  note                String?
+  rejectReason        String?
+  respondBy           DateTime       @db.Timestamptz(3)
+  payBy               DateTime?      @db.Timestamptz(3)
+  gradeReminderSentAt DateTime?      @db.Timestamptz(3)
+  createdAt           DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime       @updatedAt @db.Timestamptz(3)
+  enrollment          Enrollment     @relation(fields: [enrollmentId], references: [id])
+  slot                Slot           @relation(fields: [slotId], references: [id])
+  payment             Payment?
+  progress            ProgressEntry?
+  review              Review?
+  events              BookingEvent[]
+
+  @@index([status, respondBy])
+  @@index([status, payBy])
+  @@index([enrollmentId])
+}
+
+model BookingEvent {
+  id        String         @id @default(cuid())
+  bookingId String
+  fromState BookingStatus?
+  toState   BookingStatus
+  actorId   String?
+  meta      Json?
+  at        DateTime       @default(now()) @db.Timestamptz(3)
+  booking   Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+model Payment {
+  id         String        @id @default(cuid())
+  bookingId  String        @unique
+  provider   String
+  orderId    String        @unique
+  amountIdr  Int
+  status     PaymentStatus @default(CREATED)
+  method     String?
+  settledAt  DateTime?     @db.Timestamptz(3)
+  rawPayload Json?
+  booking    Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model ProgressEntry {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  score     Int
+  note      String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Certificate {
+  id           String     @id @default(cuid())
+  enrollmentId String     @unique
+  code         String     @unique
+  filePath     String
+  issuedAt     DateTime   @default(now()) @db.Timestamptz(3)
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime? @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
