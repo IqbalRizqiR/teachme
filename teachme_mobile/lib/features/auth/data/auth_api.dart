@@ -29,20 +29,19 @@ class AuthApi {
   }
 
   Future<void> logout(String refreshToken) async {
-    await _dio.post('/auth/logout', data: {'refreshToken': refreshToken});
+    await _dio.post<void>('/auth/logout', data: {'refreshToken': refreshToken});
   }
 
   Future<AuthUser> getMe() async {
-    try {
-      final response = await _dio.get('/me');
-      return AuthUser.fromJson(response.data as Map<String, dynamic>);
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
-        final response = await _dio.get('/auth/me');
-        return AuthUser.fromJson(response.data as Map<String, dynamic>);
-      }
-      rethrow;
-    }
+    final response = await _dio.get('/auth/me');
+    final data = response.data as Map<String, dynamic>;
+    return AuthUser(
+      id: data['id'] as String,
+      name: data['name'] as String,
+      email: data['email'] as String,
+      role: data['role'] as String,
+      avatarUrl: data['avatarUrl'] as String? ?? data['avatarPath'] as String?,
+    );
   }
 }
 

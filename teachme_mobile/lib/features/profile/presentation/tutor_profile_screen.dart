@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:teachme_mobile/core/storage/prefs.dart';
 import 'package:teachme_mobile/core/theme/tokens.dart';
-import 'package:teachme_mobile/core/widgets/app_button.dart';
 import 'package:teachme_mobile/core/widgets/avatar_widget.dart';
 import 'package:teachme_mobile/features/auth/domain/auth_state.dart';
 import 'package:teachme_mobile/features/auth/presentation/auth_controller.dart';
@@ -54,7 +53,16 @@ class _TutorProfileScreenState extends ConsumerState<TutorProfileScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil')),
+      appBar: AppBar(
+        title: const Text('Profil'),
+        actions: [
+          IconButton(
+            tooltip: 'Keluar',
+            icon: const Icon(Icons.logout_rounded),
+            onPressed: _confirmLogout,
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -215,12 +223,31 @@ class _TutorProfileScreenState extends ConsumerState<TutorProfileScreen> {
           const SizedBox(height: 16),
           Card(
             shape: cardShape,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: AppButton(
-                label: 'Keluar Akun',
-                variant: AppButtonVariant.outlined,
-                onPressed: _confirmLogout,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(Radii.lg),
+              onTap: _confirmLogout,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 18,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.logout_rounded,
+                      size: 20,
+                      color: theme.colorScheme.error,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Keluar Akun',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

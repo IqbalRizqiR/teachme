@@ -68,14 +68,16 @@ class AuthController extends Notifier<AuthState> {
   Future<void> logout() async {
     final api = ref.read(authApiProvider);
     final store = ref.read(tokenStoreProvider);
-    final refreshToken = await store.getRefreshToken();
-    if (refreshToken != null) {
-      try {
+    try {
+      final refreshToken = await store.getRefreshToken();
+      if (refreshToken != null) {
         await api.logout(refreshToken);
-      } catch (_) {}
+      }
+    } catch (_) {
+    } finally {
+      await store.clear();
+      state = const AuthState.unauthenticated();
     }
-    await store.clear();
-    state = const AuthState.unauthenticated();
   }
 
   AppRole _parseRole(String role) {
