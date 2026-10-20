@@ -1,0 +1,2031 @@
+{
+  "info": {
+    "_postman_id": "b7f3c1a2-9e4d-4f6b-8a10-teachme000001",
+    "name": "teachMe API",
+    "description": "REST collection for the teachMe tutoring marketplace API (Express + Prisma + Supabase).\n\nBase URL: http://localhost:3000/api/v1\n\nDemo accounts (run `npm run seed` in teachme-be/ first):\n- Student: student@teachme.dev / Password123!\n- Tutor: tutor@teachme.dev / Password123!\n- Tutor: sarah@teachme.dev / Password123!\n- Tutor: rafi@teachme.dev / Password123!\n\nStart with the Auth folder (Login Student and Login Tutor) or run the E2E Happy Path folder to exercise the whole booking lifecycle.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{studentToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api/v1" },
+    { "key": "studentToken", "value": "" },
+    { "key": "tutorToken", "value": "" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "subjectId", "value": "" },
+    { "key": "tutorId", "value": "" },
+    { "key": "slotId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "orderId", "value": "" },
+    { "key": "enrollmentId", "value": "" },
+    { "key": "certificateId", "value": "" },
+    { "key": "certificateCode", "value": "" },
+    { "key": "ruleId", "value": "" },
+    { "key": "exceptionId", "value": "" },
+    { "key": "notificationId", "value": "" },
+    { "key": "slotFrom", "value": "" },
+    { "key": "slotTo", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health",
+            "description": "Liveness probe. Public, no auth required."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/health"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"status\": \"ok\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (Student)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nadia Putri\",\n  \"email\": \"nadia@teachme.dev\",\n  \"password\": \"Password123!\",\n  \"role\": \"STUDENT\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/register",
+            "description": "Create an account. Password must be >= 8 chars with a letter and a number. Role is STUDENT or TUTOR."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) pm.environment.set('accessToken', json.accessToken);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/auth/register"
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refreshToken\": \"940072936a13bbf83a10103a47d0aa3bbe56459dea22bca2959285d8cfb286e41be794668e1800d8\",\n  \"expiresIn\": 900,\n  \"user\": {\n    \"id\": \"cmvg2roz20008nzv41d4l5lvx\",\n    \"name\": \"Nadia Putri\",\n    \"email\": \"nadia@teachme.dev\",\n    \"role\": \"STUDENT\",\n    \"avatarUrl\": null\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login (Student)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@teachme.dev\",\n  \"password\": \"Password123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Logs in the seeded student. Saves studentToken, refreshToken and userId to the environment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Has accessToken', () => pm.expect(json.accessToken).to.be.a('string'));",
+                  "if (json.accessToken) pm.environment.set('studentToken', json.accessToken);",
+                  "if (json.refreshToken) pm.environment.set('refreshToken', json.refreshToken);",
+                  "if (json.user && json.user.id) pm.environment.set('userId', json.user.id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/auth/login"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refreshToken\": \"940072936a13bbf83a10103a47d0aa3bbe56459dea22bca2959285d8cfb286e41be794668e1800d8\",\n  \"expiresIn\": 900,\n  \"user\": {\n    \"id\": \"cmvg2roz20008nzv41d4l5lvx\",\n    \"name\": \"Alya Ramadhani\",\n    \"email\": \"student@teachme.dev\",\n    \"role\": \"STUDENT\",\n    \"avatarUrl\": null\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login (Tutor)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tutor@teachme.dev\",\n  \"password\": \"Password123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Logs in the seeded tutor. Saves tutorToken to the environment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) pm.environment.set('tutorToken', json.accessToken);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/auth/login"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refreshToken\": \"1c376d053650f9e4bb0184fc86b54db2dd5e6c88495c5b5781b39bef131a5854c04842a01f1064d5\",\n  \"expiresIn\": 900,\n  \"user\": {\n    \"id\": \"cmvg2rqan000anzv4v99rtq99\",\n    \"name\": \"Bima Prasetya\",\n    \"email\": \"tutor@teachme.dev\",\n    \"role\": \"TUTOR\",\n    \"avatarUrl\": null\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/refresh",
+            "description": "Rotates the refresh token. The token is invalidated on use; reusing a revoked token revokes the whole family."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.refreshToken) pm.environment.set('refreshToken', json.refreshToken);",
+                  "if (json.accessToken) pm.environment.set('studentToken', json.accessToken);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/auth/refresh"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refreshToken\": \"a1b2c3d4e5f6...\",\n  \"expiresIn\": 900,\n  \"user\": {\n    \"id\": \"cmvg2roz20008nzv41d4l5lvx\",\n    \"name\": \"Alya Ramadhani\",\n    \"email\": \"student@teachme.dev\",\n    \"role\": \"STUDENT\",\n    \"avatarUrl\": null\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "Revokes the current refresh token. Requires a valid access token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 204 or 200', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/auth/logout"
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Returns the current user with profile. Uses the collection bearer (studentToken)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.role) pm.environment.set('role', json.role);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/auth/me" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2roz20008nzv41d4l5lvx\",\n  \"name\": \"Alya Ramadhani\",\n  \"email\": \"student@teachme.dev\",\n  \"role\": \"STUDENT\",\n  \"avatarPath\": null,\n  \"timezone\": \"Asia/Jakarta\",\n  \"student\": {\n    \"id\": \"cmvg2roz20009nzv41d4l5lvx\",\n    \"schoolLevel\": \"SMA\"\n  },\n  \"tutor\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Me",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alya Ramadhani\",\n  \"timezone\": \"Asia/Jakarta\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Update display name and/or timezone."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/auth/me"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2roz20008nzv41d4l5lvx\",\n  \"name\": \"Alya Ramadhani\",\n  \"email\": \"student@teachme.dev\",\n  \"role\": \"STUDENT\",\n  \"avatarPath\": null,\n  \"timezone\": \"Asia/Jakarta\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Subjects",
+      "item": [
+        {
+          "name": "List Subjects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/subjects",
+            "description": "Returns all subjects alphabetically. Saves the first subject id to subjectId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Is array', () => pm.expect(json).to.be.an('array'));",
+                  "if (Array.isArray(json) && json.length) pm.environment.set('subjectId', json[0].id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/subjects" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "[\n  { \"id\": \"cmvg2abc0000subject01\", \"name\": \"Bahasa Inggris\", \"slug\": \"bahasa-inggris\" },\n  { \"id\": \"cmvg2abc0000subject02\", \"name\": \"Biologi\", \"slug\": \"biologi\" },\n  { \"id\": \"cmvg2abc0000subject03\", \"name\": \"Ekonomi\", \"slug\": \"ekonomi\" },\n  { \"id\": \"cmvg2abc0000subject04\", \"name\": \"Fisika\", \"slug\": \"fisika\" },\n  { \"id\": \"cmvg2abc0000subject05\", \"name\": \"Informatika\", \"slug\": \"informatika\" },\n  { \"id\": \"cmvg2abc0000subject06\", \"name\": \"Kimia\", \"slug\": \"kimia\" },\n  { \"id\": \"cmvg2abc0000subject07\", \"name\": \"Matematika\", \"slug\": \"matematika\" },\n  { \"id\": \"cmvg2abc0000subject08\", \"name\": \"Sejarah\", \"slug\": \"sejarah\" }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tutors",
+      "item": [
+        {
+          "name": "Search Tutors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tutors?limit=20",
+            "description": "Student-only. Filters: q, subjectId, minPrice, maxPrice, minRating, sort (rating|price_asc|price_desc|newest), cursor, limit. Saves the first tutor id to tutorId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.items && json.items.length) {",
+                  "  pm.environment.set('tutorId', json.items[0].id);",
+                  "  if (json.items[0].subjects && json.items[0].subjects.length) pm.environment.set('subjectId', json.items[0].subjects[0].subjectId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/tutors?limit=20" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"items\": [\n    {\n      \"id\": \"cmvg2tutor0001\",\n      \"userId\": \"cmvg2rqan000anzv4v99rtq99\",\n      \"name\": \"Bima Prasetya\",\n      \"avatarUrl\": null,\n      \"ratingAvg\": 5,\n      \"ratingCount\": 1,\n      \"subjects\": [\n        { \"id\": \"cmvg2ts0001\", \"subjectId\": \"cmvg2abc0000subject07\", \"subjectName\": \"Matematika\", \"priceIdr\": 75000 },\n        { \"id\": \"cmvg2ts0002\", \"subjectId\": \"cmvg2abc0000subject04\", \"subjectName\": \"Fisika\", \"priceIdr\": 80000 }\n      ],\n      \"nextSlot\": \"2026-10-20T09:00:00.000Z\"\n    }\n  ],\n  \"nextCursor\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Tutor Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tutors/{{tutorId}}",
+            "description": "Full tutor profile: bio, verification, rating, subjects with pricing."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/tutors/{{tutorId}}" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2tutor0001\",\n  \"userId\": \"cmvg2rqan000anzv4v99rtq99\",\n  \"name\": \"Bima Prasetya\",\n  \"avatarUrl\": null,\n  \"bio\": \"Mahasiswa Teknik UI semester 6 dengan pengalaman mengajar privat selama 3 tahun.\",\n  \"isVerified\": true,\n  \"ratingAvg\": 5,\n  \"ratingCount\": 1,\n  \"subjects\": [\n    { \"id\": \"cmvg2ts0001\", \"subjectId\": \"cmvg2abc0000subject07\", \"subjectName\": \"Matematika\", \"priceIdr\": 75000 },\n    { \"id\": \"cmvg2ts0002\", \"subjectId\": \"cmvg2abc0000subject04\", \"subjectName\": \"Fisika\", \"priceIdr\": 80000 }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Tutor Slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tutors/{{tutorId}}/slots?from={{slotFrom}}&to={{slotTo}}",
+            "description": "Open slots in a date range. Pre-request script computes slotFrom (now) and slotTo (now + 14 days) as ISO strings. Saves the first OPEN slot id to slotId."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const now = new Date();",
+                  "const to = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);",
+                  "pm.environment.set('slotFrom', now.toISOString());",
+                  "pm.environment.set('slotTo', to.toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const open = (Array.isArray(json) ? json : []).find((s) => s.status === 'OPEN');",
+                  "if (open) pm.environment.set('slotId', open.id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/tutors/{{tutorId}}/slots?from=&to=" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "[\n  { \"id\": \"cmvg2slot0001\", \"startsAt\": \"2026-10-21T09:00:00.000Z\", \"endsAt\": \"2026-10-21T10:00:00.000Z\", \"status\": \"OPEN\" },\n  { \"id\": \"cmvg2slot0002\", \"startsAt\": \"2026-10-21T10:00:00.000Z\", \"endsAt\": \"2026-10-21T11:00:00.000Z\", \"status\": \"OPEN\" }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Tutor Reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tutors/{{tutorId}}/reviews?limit=20",
+            "description": "Paginated reviews for a tutor."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/tutors/{{tutorId}}/reviews?limit=20" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"items\": [\n    {\n      \"id\": \"cmvg2rev0001\",\n      \"rating\": 5,\n      \"comment\": \"Pak Bima menjelaskan dengan sangat jelas dan sabar.\",\n      \"studentName\": \"Alya Ramadhani\",\n      \"createdAt\": \"2026-10-17T09:00:00.000Z\"\n    }\n  ],\n  \"nextCursor\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Tutor Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{tutorToken}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Mahasiswa Teknik UI semester 6. Sabar, terstruktur, dan fokus latihan soal.\",\n  \"subjects\": [\n    { \"subjectId\": \"{{subjectId}}\", \"priceIdr\": 75000 }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/tutors/tutor/profile",
+            "description": "Tutor-only. Replaces bio and the tutor's subject list with pricing. Requires tutorToken."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/tutors/tutor/profile"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2tutor0001\",\n  \"userId\": \"cmvg2rqan000anzv4v99rtq99\",\n  \"bio\": \"Mahasiswa Teknik UI semester 6. Sabar, terstruktur, dan fokus latihan soal.\",\n  \"isVerified\": true,\n  \"ratingAvg\": 5,\n  \"ratingCount\": 1,\n  \"subjects\": [\n    { \"id\": \"cmvg2ts0001\", \"subjectId\": \"cmvg2abc0000subject07\", \"subjectName\": \"Matematika\", \"priceIdr\": 75000 }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Schedule (Tutor)",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{tutorToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "Get Availability Rules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tutor/availability-rules",
+            "description": "Tutor-only. Weekly availability rules (weekday 0=Sun..6=Sat, minutes from midnight)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/tutor/availability-rules" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "[\n  { \"id\": \"seed-cmvg2tutor0001-1\", \"weekday\": 1, \"startMinute\": 960, \"endMinute\": 1200 },\n  { \"id\": \"seed-cmvg2tutor0001-2\", \"weekday\": 2, \"startMinute\": 960, \"endMinute\": 1200 }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Create Availability Rule",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weekday\": 6,\n  \"startMinute\": 540,\n  \"endMinute\": 720\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/tutor/availability-rules",
+            "description": "Creates a weekly rule (Saturday 09:00-12:00). Saves ruleId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.id) pm.environment.set('ruleId', json.id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/tutor/availability-rules"
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2rule0009\",\n  \"tutorId\": \"cmvg2tutor0001\",\n  \"weekday\": 6,\n  \"startMinute\": 540,\n  \"endMinute\": 720\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Availability Rule",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startMinute\": 600,\n  \"endMinute\": 780\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/tutor/availability-rules/{{ruleId}}",
+            "description": "Updates a weekly rule (Saturday 10:00-13:00)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/tutor/availability-rules/{{ruleId}}"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2rule0009\",\n  \"tutorId\": \"cmvg2tutor0001\",\n  \"weekday\": 6,\n  \"startMinute\": 600,\n  \"endMinute\": 780\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Availability Rule",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/tutor/availability-rules/{{ruleId}}",
+            "description": "Deletes a weekly rule. Rematerializes slots (booked/held slots are preserved)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/tutor/availability-rules/{{ruleId}}" },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Get Availability Exceptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tutor/availability-exceptions",
+            "description": "Tutor-only. Blocked dates."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/tutor/availability-exceptions" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "[\n  { \"id\": \"cmvg2exc0001\", \"date\": \"2026-12-25T00:00:00.000Z\", \"reason\": \"Libur Natal\" }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Create Availability Exception",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-12-31\",\n  \"reason\": \"Libur akhir tahun\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/tutor/availability-exceptions",
+            "description": "Blocks a date. Saves exceptionId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.id) pm.environment.set('exceptionId', json.id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/tutor/availability-exceptions"
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2exc0002\",\n  \"tutorId\": \"cmvg2tutor0001\",\n  \"date\": \"2026-12-31T00:00:00.000Z\",\n  \"reason\": \"Libur akhir tahun\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Availability Exception",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/tutor/availability-exceptions/{{exceptionId}}",
+            "description": "Removes a blocked date and rematerializes slots."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/tutor/availability-exceptions/{{exceptionId}}" },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Get Tutor Slots (Own)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tutor/slots",
+            "description": "Tutor-only. Own slots with status (for the schedule preview)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/tutor/slots" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "[\n  { \"id\": \"cmvg2slot0001\", \"startsAt\": \"2026-10-21T09:00:00.000Z\", \"endsAt\": \"2026-10-21T10:00:00.000Z\", \"status\": \"OPEN\" },\n  { \"id\": \"cmvg2slot0005\", \"startsAt\": \"2026-10-17T09:00:00.000Z\", \"endsAt\": \"2026-10-17T10:00:00.000Z\", \"status\": \"BOOKED\" }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard (Tutor)",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{tutorToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "Get Tutor Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tutor/dashboard",
+            "description": "Tutor-only. Stats, incoming requests, upcoming sessions, needs-grading."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/tutor/dashboard" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"thisWeekSessions\": 3,\n  \"pendingRequests\": 1,\n  \"earningsThisMonth\": 0,\n  \"ratingAvg\": 5,\n  \"ratingCount\": 1,\n  \"incomingBookings\": [],\n  \"upcomingSessions\": [],\n  \"needsGrading\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Tutor Earnings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tutor/earnings?limit=20",
+            "description": "Tutor-only. Paginated ledger of completed bookings (gross, fee, net)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/tutor/earnings?limit=20" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"items\": [\n    { \"bookingId\": \"cmvg2book0001\", \"gross\": 75000, \"fee\": 7500, \"net\": 67500, \"date\": \"2026-10-17T09:00:00.000Z\", \"studentName\": \"Alya Ramadhani\", \"subjectName\": \"Matematika\" }\n  ],\n  \"totals\": { \"gross\": 75000, \"fee\": 7500, \"net\": 67500 },\n  \"nextCursor\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slotId\": \"{{slotId}}\",\n  \"subjectId\": \"{{subjectId}}\",\n  \"note\": \"Butuh bantuan turunan dan limit.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/bookings",
+            "description": "Student-only. Atomically claims the slot (OPEN -> HELD) and creates a PENDING booking. Saves bookingId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.id) pm.environment.set('bookingId', json.id);",
+                  "pm.test('Status is PENDING', () => pm.expect(json.status).to.eql('PENDING'));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/bookings"
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2book0009\",\n  \"status\": \"PENDING\",\n  \"priceIdr\": 75000,\n  \"feeIdr\": 7500,\n  \"note\": \"Butuh bantuan turunan dan limit.\",\n  \"respondBy\": \"2026-10-21T09:00:00.000Z\",\n  \"payBy\": null,\n  \"createdAt\": \"2026-10-20T09:00:00.000Z\",\n  \"slot\": { \"id\": \"cmvg2slot0001\", \"startsAt\": \"2026-10-21T09:00:00.000Z\", \"endsAt\": \"2026-10-21T10:00:00.000Z\", \"status\": \"HELD\" },\n  \"tutor\": { \"id\": \"cmvg2tutor0001\", \"name\": \"Bima Prasetya\" },\n  \"subjectName\": \"Matematika\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bookings?limit=20",
+            "description": "Both roles. Own bookings; filter with status=PENDING|ACCEPTED|PAID|COMPLETED|REJECTED|CANCELLED|EXPIRED."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/bookings?limit=20" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"items\": [\n    {\n      \"id\": \"cmvg2book0001\",\n      \"status\": \"COMPLETED\",\n      \"priceIdr\": 75000,\n      \"feeIdr\": 7500,\n      \"slot\": { \"id\": \"cmvg2slot0005\", \"startsAt\": \"2026-10-17T09:00:00.000Z\", \"endsAt\": \"2026-10-17T10:00:00.000Z\", \"status\": \"BOOKED\" },\n      \"tutor\": { \"id\": \"cmvg2tutor0001\", \"name\": \"Bima Prasetya\" },\n      \"subjectName\": \"Matematika\"\n    }\n  ],\n  \"nextCursor\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Booking",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bookings/{{bookingId}}",
+            "description": "Booking detail with payment and events. Owner only."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/bookings/{{bookingId}}" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2book0009\",\n  \"status\": \"ACCEPTED\",\n  \"priceIdr\": 75000,\n  \"feeIdr\": 7500,\n  \"respondBy\": \"2026-10-21T09:00:00.000Z\",\n  \"payBy\": \"2026-10-20T11:00:00.000Z\",\n  \"slot\": { \"id\": \"cmvg2slot0001\", \"startsAt\": \"2026-10-21T09:00:00.000Z\", \"endsAt\": \"2026-10-21T10:00:00.000Z\", \"status\": \"HELD\" },\n  \"tutor\": { \"id\": \"cmvg2tutor0001\", \"name\": \"Bima Prasetya\" },\n  \"subjectName\": \"Matematika\",\n  \"payment\": { \"id\": \"cmvg2pay0009\", \"orderId\": \"TM-cmvg2book0009\", \"amountIdr\": 75000, \"status\": \"CREATED\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Accept Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{tutorToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/accept",
+            "description": "Tutor-only. PENDING -> ACCEPTED, sets payBy (+2h) and creates a CREATED payment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Status is ACCEPTED', () => pm.expect(json.status).to.eql('ACCEPTED'));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "POST", "header": [], "url": "{{baseUrl}}/bookings/{{bookingId}}/accept" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2book0009\",\n  \"status\": \"ACCEPTED\",\n  \"priceIdr\": 75000,\n  \"feeIdr\": 7500,\n  \"payBy\": \"2026-10-20T11:00:00.000Z\",\n  \"slot\": { \"id\": \"cmvg2slot0001\", \"startsAt\": \"2026-10-21T09:00:00.000Z\", \"endsAt\": \"2026-10-21T10:00:00.000Z\", \"status\": \"HELD\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{tutorToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Jadwal bentrok dengan sesi lain.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/reject",
+            "description": "Tutor-only. PENDING -> REJECTED; frees the slot."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/bookings/{{bookingId}}/reject"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Booking rejected\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/cancel",
+            "description": "Student-only. Cancels a PENDING or ACCEPTED booking; frees the slot."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "POST", "header": [], "url": "{{baseUrl}}/bookings/{{bookingId}}/cancel" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Booking cancelled\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Grade Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{tutorToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"score\": 88,\n  \"note\": \"Pemahaman turunan sudah bagus. Lanjut latihan limit ya.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/grade",
+            "description": "Tutor-only. PAID -> COMPLETED (requires slot.endsAt in the past). Creates a ProgressEntry and evaluates certificates."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Graded', () => pm.expect(pm.response.json().message).to.eql('Booking graded'));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/bookings/{{bookingId}}/grade"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Booking graded\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Review Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Penjelasannya jelas dan sabar. Recommended!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/review",
+            "description": "Student-only. Review a COMPLETED booking once. Updates the tutor's rating average."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/bookings/{{bookingId}}/review"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Review submitted\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "item": [
+        {
+          "name": "Pay Booking (Initiate)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/pay",
+            "description": "Student-only. Booking must be ACCEPTED. Returns mock charge info (orderId, methods, reference) and sets the payment to PENDING. Saves orderId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.orderId) pm.environment.set('orderId', json.orderId);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "POST", "header": [], "url": "{{baseUrl}}/bookings/{{bookingId}}/pay" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"orderId\": \"TM-cmvg2book0009\",\n  \"methods\": [\"bank_transfer\", \"ewallet\"],\n  \"reference\": \"mock-ref-TM-cmvg2book0009\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Settle Payment (Dev)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/dev/payments/{{orderId}}/settle",
+            "description": "DEV ONLY (disabled when NODE_ENV=production). Idempotently settles the payment: Payment SETTLED, Booking PAID, Slot BOOKED."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Payment SETTLED', () => pm.expect(pm.response.json().status).to.eql('SETTLED'));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "POST", "header": [], "url": "{{baseUrl}}/dev/payments/{{orderId}}/settle" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2pay0009\",\n  \"bookingId\": \"cmvg2book0009\",\n  \"provider\": \"mock\",\n  \"orderId\": \"TM-cmvg2book0009\",\n  \"amountIdr\": 75000,\n  \"status\": \"SETTLED\",\n  \"method\": null,\n  \"settledAt\": \"2026-10-20T09:05:00.000Z\",\n  \"rawPayload\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Progress (Student)",
+      "item": [
+        {
+          "name": "Get Progress",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/progress?enrollmentId={{enrollmentId}}",
+            "description": "Student-only. Series of scores + summary (target, minSessions, completedSessions, average)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/progress?enrollmentId={{enrollmentId}}" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"entries\": [\n    { \"sessionNo\": 1, \"date\": \"2026-10-17T09:00:00.000Z\", \"score\": 85, \"note\": \"Bagus! Pemahaman aljabar sudah meningkat.\", \"subjectName\": \"Matematika\", \"tutorName\": \"Bima Prasetya\" }\n  ],\n  \"summary\": { \"targetScore\": 80, \"minSessions\": 5, \"completedSessions\": 1, \"average\": 85 }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Enrollments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/enrollments",
+            "description": "Student-only. Own enrollments with progress summary and certificate status. Saves enrollmentId and certificateId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (Array.isArray(json) && json.length) {",
+                  "  pm.environment.set('enrollmentId', json[0].id);",
+                  "  if (json[0].certificateId) pm.environment.set('certificateId', json[0].certificateId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/enrollments" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": \"cmvg2enr0001\",\n    \"subjectName\": \"Matematika\",\n    \"tutorName\": \"Bima Prasetya\",\n    \"targetScore\": 80,\n    \"minSessions\": 5,\n    \"completedSessions\": 1,\n    \"averageScore\": 85,\n    \"hasCertificate\": false,\n    \"certificateId\": null\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Update Enrollment Target",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetScore\": 85,\n  \"minSessions\": 6\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/enrollments/{{enrollmentId}}/target",
+            "description": "Student-only. Sets the learning target (target score and minimum sessions) per enrollment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{}" },
+                "url": "{{baseUrl}}/enrollments/{{enrollmentId}}/target"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2enr0001\",\n  \"studentId\": \"cmvg2roz20009nzv41d4l5lvx\",\n  \"tutorSubjectId\": \"cmvg2ts0001\",\n  \"targetScore\": 85,\n  \"minSessions\": 6,\n  \"status\": \"ACTIVE\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Download Certificate",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/certificates/{{certificateId}}/download",
+            "description": "Student-only. Streams the certificate PDF (requires certificateId; available after a target is reached)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK (PDF stream)",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/certificates/{{certificateId}}/download" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "text",
+              "header": [
+                { "key": "Content-Type", "value": "application/pdf" },
+                { "key": "Content-Disposition", "value": "attachment; filename=\"certificate-{{certificateId}}.pdf\"" }
+              ],
+              "cookie": [],
+              "body": "%PDF-1.3 (binary PDF content)"
+            }
+          ]
+        },
+        {
+          "name": "Verify Certificate",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/certificates/verify/{{certificateCode}}",
+            "description": "Public. Returns non-sensitive verification info for a certificate code."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/certificates/verify/{{certificateCode}}" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"valid\": true,\n  \"studentFirstName\": \"Alya\",\n  \"subject\": \"Matematika\",\n  \"issuedAt\": \"2026-10-20T09:00:00.000Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/notifications?limit=20",
+            "description": "Inbox with unreadCount. Uses the collection bearer (studentToken). Saves the first notification id."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.items && json.items.length) pm.environment.set('notificationId', json.items[0].id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": "{{baseUrl}}/notifications?limit=20" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"items\": [\n    {\n      \"id\": \"cmvg2notif0001\",\n      \"type\": \"PAYMENT_SETTLED\",\n      \"title\": \"Payment Confirmed\",\n      \"body\": \"Your payment has been confirmed. Your session is booked.\",\n      \"data\": { \"bookingId\": \"cmvg2book0009\" },\n      \"readAt\": null,\n      \"createdAt\": \"2026-10-20T09:05:00.000Z\"\n    }\n  ],\n  \"nextCursor\": null,\n  \"unreadCount\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/notifications/{{notificationId}}/read",
+            "description": "Marks a single notification as read."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "POST", "header": [], "url": "{{baseUrl}}/notifications/{{notificationId}}/read" },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmvg2notif0001\",\n  \"type\": \"PAYMENT_SETTLED\",\n  \"title\": \"Payment Confirmed\",\n  \"body\": \"Your payment has been confirmed. Your session is booked.\",\n  \"data\": { \"bookingId\": \"cmvg2book0009\" },\n  \"readAt\": \"2026-10-20T09:06:00.000Z\",\n  \"createdAt\": \"2026-10-20T09:05:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Mark All Read",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/notifications/read-all",
+            "description": "Marks all notifications as read."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": { "method": "POST", "header": [], "url": "{{baseUrl}}/notifications/read-all" },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "E2E Happy Path",
+      "description": "Runnable end-to-end chain using the seeded accounts. Run the requests in order (Runner) to exercise the full lifecycle: login -> discover -> book -> accept -> pay -> settle -> grade -> progress.",
+      "item": [
+        {
+          "name": "1. Login Student",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@teachme.dev\",\n  \"password\": \"Password123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('studentToken', json.accessToken);",
+                  "pm.environment.set('refreshToken', json.refreshToken);",
+                  "pm.environment.set('userId', json.user.id);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "2. Login Tutor",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tutor@teachme.dev\",\n  \"password\": \"Password123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.set('tutorToken', pm.response.json().accessToken);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "3. List Subjects",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/subjects"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.length) pm.environment.set('subjectId', json[0].id);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "4. Search Tutors",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tutors?limit=20"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.items && json.items.length) {",
+                  "  pm.environment.set('tutorId', json.items[0].id);",
+                  "  pm.environment.set('subjectId', json.items[0].subjects[0].subjectId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "5. Get Tutor Slots",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tutors/{{tutorId}}/slots?from={{slotFrom}}&to={{slotTo}}"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const now = new Date();",
+                  "const to = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);",
+                  "pm.environment.set('slotFrom', now.toISOString());",
+                  "pm.environment.set('slotTo', to.toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const open = (Array.isArray(json) ? json : []).find((s) => s.status === 'OPEN');",
+                  "pm.test('Has an OPEN slot', () => pm.expect(open).to.not.be.undefined);",
+                  "if (open) pm.environment.set('slotId', open.id);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "6. Create Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slotId\": \"{{slotId}}\",\n  \"subjectId\": \"{{subjectId}}\",\n  \"note\": \"E2E test booking\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/bookings"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('bookingId', json.id);",
+                  "pm.test('PENDING', () => pm.expect(json.status).to.eql('PENDING'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "7. Tutor Accepts Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{tutorToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/accept"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ACCEPTED', () => pm.expect(pm.response.json().status).to.eql('ACCEPTED'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "8. Student Pays",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/pay"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.set('orderId', pm.response.json().orderId);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "9. Settle Payment (Dev)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/dev/payments/{{orderId}}/settle"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('SETTLED', () => pm.expect(pm.response.json().status).to.eql('SETTLED'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "10. Tutor Grades (after session end)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{tutorToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"score\": 88,\n  \"note\": \"E2E grading. Great progress!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/grade",
+            "description": "Requires the slot.endsAt to be in the past. If the slot is in the future this returns a conflict; use the seeded completed booking for a guaranteed COMPLETED transition."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Graded', () => pm.expect(pm.response.json().message).to.eql('Booking graded'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "11. Get Enrollments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/enrollments"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.length) {",
+                  "  pm.environment.set('enrollmentId', json[0].id);",
+                  "  if (json[0].certificateId) pm.environment.set('certificateId', json[0].certificateId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "12. Get Progress",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/progress?enrollmentId={{enrollmentId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has entries or summary', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.summary).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ]
+}
