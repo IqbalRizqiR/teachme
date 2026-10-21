@@ -18,7 +18,7 @@ export type UpdateRuleBody = z.infer<typeof updateRuleBody>;
 
 export const createExceptionBody = z.object({
   date: z.string(),
-  reason: z.string().optional(),
+  reason: z.string().nullish(),
 });
 
 export type CreateExceptionBody = z.infer<typeof createExceptionBody>;

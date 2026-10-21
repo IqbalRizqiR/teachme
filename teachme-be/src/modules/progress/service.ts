@@ -65,12 +65,12 @@ export async function getProgress(
   return {
     entries: entries.map((e, i) => ({
       id: e.id,
-      sessionNumber: entries.length - i,
+      sessionNo: entries.length - i,
       date: e.createdAt,
       score: e.score,
       note: e.note,
-      subject: e.booking.enrollment.tutorSubject.subject.name,
-      tutor: e.booking.enrollment.tutorSubject.tutor.user.name,
+      subjectName: e.booking.enrollment.tutorSubject.subject.name,
+      tutorName: e.booking.enrollment.tutorSubject.tutor.user.name,
     })),
     summary: {
       targetScore: enrollment?.targetScore ?? null,
@@ -118,24 +118,14 @@ export async function getEnrollments(studentUserId: string) {
 
     return {
       id: e.id,
-      status: e.status,
+      subjectName: e.tutorSubject.subject.name,
+      tutorName: e.tutorSubject.tutor.user.name,
       targetScore: e.targetScore,
       minSessions: e.minSessions,
-      tutorSubject: {
-        subjectName: e.tutorSubject.subject.name,
-        tutorName: e.tutorSubject.tutor.user.name,
-      },
-      progress: {
-        completedSessions: completedBookings.length,
-        average,
-      },
-      certificate: e.certificate
-        ? {
-            id: e.certificate.id,
-            code: e.certificate.code,
-            issuedAt: e.certificate.issuedAt,
-          }
-        : null,
+      completedSessions: completedBookings.length,
+      averageScore: average,
+      hasCertificate: e.certificate !== null,
+      certificateId: e.certificate?.id ?? null,
     };
   });
 }

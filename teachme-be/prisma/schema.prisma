@@ -148,7 +148,7 @@ model Slot {
   endsAt   DateTime     @db.Timestamptz(3)
   status   SlotStatus   @default(OPEN)
   tutor    TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
-  booking  Booking?
+  bookings Booking[]
 
   @@unique([tutorId, startsAt])
   @@index([tutorId, status, startsAt])
@@ -172,7 +172,7 @@ model Enrollment {
 model Booking {
   id                  String         @id @default(cuid())
   enrollmentId        String
-  slotId              String         @unique
+  slotId              String
   status              BookingStatus  @default(PENDING)
   priceIdr            Int
   feeIdr              Int
@@ -193,6 +193,7 @@ model Booking {
   @@index([status, respondBy])
   @@index([status, payBy])
   @@index([enrollmentId])
+  @@index([slotId])
 }
 
 model BookingEvent {

@@ -20,6 +20,13 @@ class ApiError {
     );
   }
 
+  String get displayMessage {
+    if (fields != null && fields!.isNotEmpty) {
+      return fields!.values.first;
+    }
+    return message;
+  }
+
   @override
   String toString() => 'ApiError(code: $code, message: $message, fields: $fields)';
 }

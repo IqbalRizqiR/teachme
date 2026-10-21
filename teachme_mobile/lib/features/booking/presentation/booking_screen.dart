@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:teachme_mobile/core/network/api_error.dart';
 import 'package:teachme_mobile/core/theme/tokens.dart';
 import 'package:teachme_mobile/core/widgets/app_button.dart';
 import 'package:teachme_mobile/core/widgets/booking_stepper.dart';
@@ -13,6 +15,7 @@ import 'package:teachme_mobile/core/widgets/status_badge.dart';
 import 'package:teachme_mobile/features/booking/data/booking_api.dart';
 import 'package:teachme_mobile/features/booking/data/booking_dto.dart';
 import 'package:teachme_mobile/features/payment/presentation/payment_sheet.dart';
+import 'package:teachme_mobile/features/review/presentation/review_sheet.dart';
 
 final bookingProvider = FutureProvider.family<BookingDto, String>(
   (ref, id) => ref.watch(bookingApiProvider).getBooking(id),
@@ -52,9 +55,13 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       await ref.read(bookingApiProvider).cancelBooking(widget.bookingId);
       ref.invalidate(bookingProvider(widget.bookingId));
       messenger.showSnackBar(const SnackBar(content: Text('Booking dibatalkan')));
-    } catch (_) {
+    } catch (e) {
+      String message = 'Gagal membatalkan booking. Coba lagi ya.';
+      if (e is DioException && e.error is ApiError) {
+        message = (e.error as ApiError).displayMessage;
+      }
       messenger.showSnackBar(
-        const SnackBar(content: Text('Gagal membatalkan booking. Coba lagi ya.')),
+        SnackBar(content: Text(message)),
       );
     }
   }
@@ -69,81 +76,23 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         booking,
         onSuccess: () => ref.invalidate(bookingProvider(widget.bookingId)),
       );
-    } catch (_) {
+    } catch (e) {
+      String message = 'Gagal memulai pembayaran. Coba lagi ya.';
+      if (e is DioException && e.error is ApiError) {
+        message = (e.error as ApiError).displayMessage;
+      }
       messenger.showSnackBar(
-        const SnackBar(content: Text('Gagal memulai pembayaran. Coba lagi ya.')),
+        SnackBar(content: Text(message)),
       );
     }
   }
 
   void _showReviewSheet(BuildContext context, String id) {
-    var rating = 5;
-    final commentController = TextEditingController();
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          final theme = Theme.of(context);
-          return Padding(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              20,
-              20,
-              20 + MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Beri Ulasan Tentor',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (i) {
-                    return IconButton(
-                      onPressed: () => setSheetState(() => rating = i + 1),
-                      icon: Icon(
-                        i < rating ? Icons.star_rounded : Icons.star_border_rounded,
-                        size: 36,
-                        color: Brand.tertiary,
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: commentController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    hintText: 'Tulis komentar (opsional)',
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: AppButton(
-                    label: 'Kirim Ulasan',
-                    variant: AppButtonVariant.primary,
-                    onPressed: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Fitur ulasan segera hadir')),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    ).whenComplete(commentController.dispose);
+    ReviewSheet.show(
+      context,
+      bookingId: id,
+      onSubmitted: () => ref.invalidate(bookingProvider(widget.bookingId)),
+    );
   }
 
   @override

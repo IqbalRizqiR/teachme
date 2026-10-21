@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import db from '../../lib/db';
 import { notFound } from '../../lib/errors';
+import { bookingInclude, serializeBooking } from '../booking/serializer';
 
 export async function getTutorDashboard(tutorUserId: string) {
   const tutor = await db.tutorProfile.findUnique({
@@ -56,19 +57,7 @@ export async function getTutorDashboard(tutorUserId: string) {
         ...enrollmentFilter,
         status: 'PENDING',
       },
-      include: {
-        enrollment: {
-          include: {
-            student: {
-              include: { user: { select: { name: true } } },
-            },
-            tutorSubject: {
-              include: { subject: true },
-            },
-          },
-        },
-        slot: true,
-      },
+      include: bookingInclude,
       orderBy: { createdAt: 'desc' },
     }),
     db.booking.findMany({
@@ -77,19 +66,7 @@ export async function getTutorDashboard(tutorUserId: string) {
         status: 'PAID',
         slot: { startsAt: { gt: now } },
       },
-      include: {
-        enrollment: {
-          include: {
-            student: {
-              include: { user: { select: { name: true } } },
-            },
-            tutorSubject: {
-              include: { subject: true },
-            },
-          },
-        },
-        slot: true,
-      },
+      include: bookingInclude,
       orderBy: { slot: { startsAt: 'asc' } },
     }),
     db.booking.findMany({
@@ -99,19 +76,7 @@ export async function getTutorDashboard(tutorUserId: string) {
         slot: { endsAt: { lt: now } },
         progress: null,
       },
-      include: {
-        enrollment: {
-          include: {
-            student: {
-              include: { user: { select: { name: true } } },
-            },
-            tutorSubject: {
-              include: { subject: true },
-            },
-          },
-        },
-        slot: true,
-      },
+      include: bookingInclude,
       orderBy: { slot: { endsAt: 'asc' } },
     }),
   ]);
@@ -127,28 +92,9 @@ export async function getTutorDashboard(tutorUserId: string) {
     earningsThisMonth,
     ratingAvg: tutor.ratingAvg,
     ratingCount: tutor.ratingCount,
-    incomingBookings: incomingBookings.map((b) => ({
-      id: b.id,
-      studentName: b.enrollment.student.user.name,
-      subject: b.enrollment.tutorSubject.subject.name,
-      slotStart: b.slot.startsAt,
-      slotEnd: b.slot.endsAt,
-      respondBy: b.respondBy,
-    })),
-    upcomingSessions: upcomingSessions.map((b) => ({
-      id: b.id,
-      studentName: b.enrollment.student.user.name,
-      subject: b.enrollment.tutorSubject.subject.name,
-      slotStart: b.slot.startsAt,
-      slotEnd: b.slot.endsAt,
-    })),
-    needsGrading: needsGrading.map((b) => ({
-      id: b.id,
-      studentName: b.enrollment.student.user.name,
-      subject: b.enrollment.tutorSubject.subject.name,
-      slotStart: b.slot.startsAt,
-      slotEnd: b.slot.endsAt,
-    })),
+    incomingBookings: incomingBookings.map(serializeBooking),
+    upcomingSessions: upcomingSessions.map(serializeBooking),
+    needsGrading: needsGrading.map(serializeBooking),
   };
 }
 

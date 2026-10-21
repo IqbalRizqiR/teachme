@@ -63,12 +63,20 @@ export async function initiatePayment(
     bookingId,
   });
 
-  await db.payment.update({
+  const updated = await db.payment.update({
     where: { id: booking.payment.id },
     data: { status: 'PENDING' },
   });
 
-  return charge;
+  return {
+    id: updated.id,
+    orderId: updated.orderId,
+    amountIdr: updated.amountIdr,
+    status: updated.status,
+    method: updated.method,
+    methods: charge.methods,
+    reference: charge.reference,
+  };
 }
 
 export async function settlePayment(orderId: string) {

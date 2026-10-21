@@ -40,7 +40,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       final message = e is DioException && e.error is ApiError
-          ? (e.error as ApiError).message
+          ? (e.error as ApiError).displayMessage
           : 'Login gagal. Silakan coba lagi.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),

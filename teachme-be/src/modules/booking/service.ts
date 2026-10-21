@@ -4,12 +4,15 @@ import { notFound, forbidden, conflict } from '../../lib/errors';
 import { env } from '../../config/env';
 import { addDuration } from '../../lib/time';
 import { assertTransition } from './state-machine';
+import { bookingInclude, serializeBooking } from './serializer';
+import * as progressService from '../progress/service';
 import type {
   CreateBookingBody,
   GradeBody,
   ReviewBody,
   ListBookingsQuery,
 } from './schemas';
+import type { SerializedBooking } from './serializer';
 
 export async function createBooking(
   studentUserId: string,
@@ -73,16 +76,7 @@ export async function createBooking(
         note: input.note,
         respondBy: addDuration(now, '24h'),
       },
-      include: {
-        slot: true,
-        enrollment: {
-          include: {
-            tutorSubject: {
-              include: { tutor: { include: { user: true } }, subject: true },
-            },
-          },
-        },
-      },
+      include: bookingInclude,
     });
 
     await tx.bookingEvent.create({
@@ -107,10 +101,10 @@ export async function createBooking(
     return created;
   });
 
-  return booking;
+  return serializeBooking(booking);
 }
 
-export async function acceptBooking(tutorUserId: string, bookingId: string) {
+export async function acceptBooking(tutorUserId: string, bookingId: string): Promise<SerializedBooking> {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -136,7 +130,7 @@ export async function acceptBooking(tutorUserId: string, bookingId: string) {
 
   const now = new Date();
 
-  const updated = await db.$transaction(async (tx) => {
+  await db.$transaction(async (tx) => {
     const result = await tx.booking.update({
       where: { id: bookingId },
       data: {
@@ -177,14 +171,19 @@ export async function acceptBooking(tutorUserId: string, bookingId: string) {
     return result;
   });
 
-  return updated;
+  const fresh = await db.booking.findUniqueOrThrow({
+    where: { id: bookingId },
+    include: bookingInclude,
+  });
+
+  return serializeBooking(fresh);
 }
 
 export async function rejectBooking(
   tutorUserId: string,
   bookingId: string,
   reason?: string,
-) {
+): Promise<SerializedBooking> {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -236,9 +235,19 @@ export async function rejectBooking(
       },
     });
   });
+
+  const fresh = await db.booking.findUniqueOrThrow({
+    where: { id: bookingId },
+    include: bookingInclude,
+  });
+
+  return serializeBooking(fresh);
 }
 
-export async function cancelBooking(studentUserId: string, bookingId: string) {
+export async function cancelBooking(
+  studentUserId: string,
+  bookingId: string,
+): Promise<SerializedBooking> {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -296,13 +305,20 @@ export async function cancelBooking(studentUserId: string, bookingId: string) {
       },
     });
   });
+
+  const fresh = await db.booking.findUniqueOrThrow({
+    where: { id: bookingId },
+    include: bookingInclude,
+  });
+
+  return serializeBooking(fresh);
 }
 
 export async function gradeBooking(
   tutorUserId: string,
   bookingId: string,
   input: GradeBody,
-) {
+): Promise<SerializedBooking> {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -365,49 +381,14 @@ export async function gradeBooking(
     });
   });
 
-  await evaluateCertificateEligibility(booking.enrollmentId);
-}
+  await progressService.evaluateCertificate(booking.enrollmentId);
 
-async function evaluateCertificateEligibility(enrollmentId: string) {
-  const enrollment = await db.enrollment.findUnique({
-    where: { id: enrollmentId },
-    include: {
-      certificate: true,
-      bookings: {
-        where: { status: 'COMPLETED' },
-        include: { progress: true },
-      },
-    },
+  const fresh = await db.booking.findUniqueOrThrow({
+    where: { id: bookingId },
+    include: bookingInclude,
   });
 
-  if (!enrollment || enrollment.certificate) return;
-
-  const completedCount = enrollment.bookings.length;
-  const minSessions = enrollment.minSessions ?? 0;
-  const targetScore = enrollment.targetScore ?? 0;
-
-  if (minSessions <= 0 || targetScore <= 0) return;
-  if (completedCount < minSessions) return;
-
-  const scores = enrollment.bookings
-    .map((b) => b.progress?.score)
-    .filter((s): s is number => s !== undefined && s !== null);
-
-  if (scores.length === 0) return;
-
-  const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-
-  if (avgScore < targetScore) return;
-
-  const code = `CERT-${enrollmentId.slice(-8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
-
-  await db.certificate.create({
-    data: {
-      enrollmentId,
-      code,
-      filePath: `certificates/${enrollmentId}.pdf`,
-    },
-  });
+  return serializeBooking(fresh);
 }
 
 export async function reviewBooking(
@@ -496,51 +477,25 @@ export async function listBookings(
     orderBy: { createdAt: 'desc' },
     take,
     ...(filters.cursor ? { cursor: { id: filters.cursor }, skip: 1 } : {}),
-    include: {
-      slot: true,
-      enrollment: {
-        include: {
-          student: { include: { user: { select: { name: true, avatarPath: true } } } },
-          tutorSubject: {
-            include: {
-              tutor: { include: { user: { select: { name: true, avatarPath: true } } } },
-              subject: true,
-            },
-          },
-        },
-      },
-      payment: true,
-    },
+    include: bookingInclude,
   });
 
   const hasMore = bookings.length > filters.limit;
   const items = hasMore ? bookings.slice(0, filters.limit) : bookings;
   const nextCursor = hasMore ? items[items.length - 1].id : undefined;
 
-  return { items, nextCursor };
+  return { items: items.map(serializeBooking), nextCursor };
 }
 
 export async function getBooking(
   userId: string,
   role: string,
   bookingId: string,
-) {
+): Promise<SerializedBooking> {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {
-      slot: true,
-      enrollment: {
-        include: {
-          student: { include: { user: { select: { name: true, avatarPath: true } } } },
-          tutorSubject: {
-            include: {
-              tutor: { include: { user: { select: { name: true, avatarPath: true } } } },
-              subject: true,
-            },
-          },
-        },
-      },
-      payment: true,
+      ...bookingInclude,
       progress: true,
       review: true,
       events: { orderBy: { at: 'asc' } },
@@ -549,10 +504,13 @@ export async function getBooking(
 
   if (!booking) throw notFound('Booking not found');
 
-  const isStudent = role === 'STUDENT' && booking.enrollment.student.userId === userId;
-  const isTutor = role === 'TUTOR' && booking.enrollment.tutorSubject.tutor.userId === userId;
+  const isStudent =
+    role === 'STUDENT' && booking.enrollment.student.userId === userId;
+  const isTutor =
+    role === 'TUTOR' &&
+    booking.enrollment.tutorSubject.tutor.userId === userId;
 
   if (!isStudent && !isTutor) throw forbidden('Not your booking');
 
-  return booking;
+  return serializeBooking(booking);
 }

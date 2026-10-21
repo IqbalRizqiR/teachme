@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:teachme_mobile/core/network/api_error.dart';
 import 'package:teachme_mobile/core/theme/tokens.dart';
 import 'package:teachme_mobile/core/widgets/app_button.dart';
 import 'package:teachme_mobile/core/widgets/avatar_widget.dart';
@@ -65,11 +67,28 @@ class _TutorDetailScreenState extends ConsumerState<TutorDetailScreen> {
             CreateBookingRequest(slotId: slot.id, subjectId: subjectId),
           );
       if (!mounted) return;
+      ref.invalidate(tutorSlotsProvider(widget.tutorId));
       context.push('/bookings/${booking.id}');
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
+      ref.invalidate(tutorSlotsProvider(widget.tutorId));
+      setState(() => _selectedSlot = null);
+
+      String message = 'Gagal membuat pesanan. Coba lagi ya.';
+      if (e is DioException) {
+        if (e.error is ApiError) {
+          message = (e.error as ApiError).displayMessage;
+        } else if (e.response?.data is Map<String, dynamic>) {
+          final data = e.response!.data as Map<String, dynamic>;
+          final errorMap = data['error'] as Map<String, dynamic>?;
+          if (errorMap?['message'] is String) {
+            message = errorMap!['message'] as String;
+          }
+        }
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal membuat pesanan. Coba lagi ya.')),
+        SnackBar(content: Text(message)),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);

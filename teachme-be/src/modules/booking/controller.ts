@@ -30,18 +30,29 @@ export async function acceptBooking(req: Request, res: Response) {
 }
 
 export async function rejectBooking(req: Request, res: Response) {
-  await bookingService.rejectBooking(req.user!.sub, req.params.id as string, req.body.reason);
-  res.status(200).json({ message: 'Booking rejected' });
+  const result = await bookingService.rejectBooking(
+    req.user!.sub,
+    req.params.id as string,
+    req.body.reason,
+  );
+  res.status(200).json(result);
 }
 
 export async function cancelBooking(req: Request, res: Response) {
-  await bookingService.cancelBooking(req.user!.sub, req.params.id as string);
-  res.status(200).json({ message: 'Booking cancelled' });
+  const result = await bookingService.cancelBooking(
+    req.user!.sub,
+    req.params.id as string,
+  );
+  res.status(200).json(result);
 }
 
 export async function gradeBooking(req: Request, res: Response) {
-  await bookingService.gradeBooking(req.user!.sub, req.params.id as string, req.body);
-  res.status(200).json({ message: 'Booking graded' });
+  const result = await bookingService.gradeBooking(
+    req.user!.sub,
+    req.params.id as string,
+    req.body,
+  );
+  res.status(200).json(result);
 }
 
 export async function reviewBooking(req: Request, res: Response) {

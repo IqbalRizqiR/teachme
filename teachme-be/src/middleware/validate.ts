@@ -8,6 +8,15 @@ interface ValidationSchema {
   query?: z.ZodTypeAny;
 }
 
+function redefine(req: Request, key: 'params' | 'query', value: unknown): void {
+  Object.defineProperty(req, key, {
+    value,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  });
+}
+
 export function validate(schema: ValidationSchema) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     try {
@@ -15,10 +24,10 @@ export function validate(schema: ValidationSchema) {
         req.body = schema.body.parse(req.body);
       }
       if (schema.params) {
-        req.params = schema.params.parse(req.params);
+        redefine(req, 'params', schema.params.parse(req.params));
       }
       if (schema.query) {
-        req.query = schema.query.parse(req.query);
+        redefine(req, 'query', schema.query.parse(req.query));
       }
     } catch (err) {
       if (err instanceof ZodError) {

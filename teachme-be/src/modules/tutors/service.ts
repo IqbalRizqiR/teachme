@@ -7,9 +7,10 @@ export async function searchTutors(query: SearchTutorsQuery) {
   const where: Prisma.TutorProfileWhereInput = { isVerified: true };
 
   if (query.q) {
-    where.user = {
-      name: { contains: query.q, mode: 'insensitive' },
-    };
+    where.OR = [
+      { user: { name: { contains: query.q, mode: 'insensitive' } } },
+      { subjects: { some: { subject: { name: { contains: query.q, mode: 'insensitive' } } } } },
+    ];
   }
 
   if (query.subjectId) {
@@ -59,7 +60,7 @@ export async function searchTutors(query: SearchTutorsQuery) {
     take,
     ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     include: {
-      user: { select: { name: true, avatarPath: true } },
+      user: { select: { id: true, name: true, avatarPath: true } },
       subjects: { include: { subject: true } },
       slots: {
         where: { status: 'OPEN', startsAt: { gt: new Date() } },
@@ -76,17 +77,18 @@ export async function searchTutors(query: SearchTutorsQuery) {
   return {
     items: items.map((t) => ({
       id: t.id,
+      userId: t.user.id,
       name: t.user.name,
-      avatarPath: t.user.avatarPath,
-      bio: t.bio,
+      avatarUrl: t.user.avatarPath,
       ratingAvg: t.ratingAvg,
       ratingCount: t.ratingCount,
       subjects: t.subjects.map((s) => ({
+        id: s.id,
         subjectId: s.subjectId,
-        name: s.subject.name,
+        subjectName: s.subject.name,
         priceIdr: s.priceIdr,
       })),
-      nextAvailableSlot: t.slots[0]?.startsAt ?? null,
+      nextSlot: t.slots[0]?.startsAt ?? null,
     })),
     nextCursor,
   };
@@ -96,7 +98,7 @@ export async function getTutorDetail(tutorId: string) {
   const tutor = await db.tutorProfile.findUnique({
     where: { id: tutorId },
     include: {
-      user: { select: { name: true, avatarPath: true, email: true } },
+      user: { select: { id: true, name: true, avatarPath: true, email: true } },
       subjects: { include: { subject: true } },
     },
   });
@@ -117,15 +119,18 @@ export async function getTutorDetail(tutorId: string) {
 
   return {
     id: tutor.id,
+    userId: tutor.user.id,
+    name: tutor.user.name,
+    avatarUrl: tutor.user.avatarPath,
+    email: tutor.user.email,
     bio: tutor.bio,
     isVerified: tutor.isVerified,
     ratingAvg: tutor.ratingAvg,
     ratingCount: tutor.ratingCount,
-    user: tutor.user,
     subjects: tutor.subjects.map((s) => ({
       id: s.id,
       subjectId: s.subjectId,
-      name: s.subject.name,
+      subjectName: s.subject.name,
       slug: s.subject.slug,
       priceIdr: s.priceIdr,
     })),

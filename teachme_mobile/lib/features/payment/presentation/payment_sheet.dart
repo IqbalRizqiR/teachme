@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:teachme_mobile/core/network/api_error.dart';
 import 'package:teachme_mobile/core/theme/tokens.dart';
 import 'package:teachme_mobile/core/widgets/app_button.dart';
 import 'package:teachme_mobile/features/booking/data/booking_api.dart';
@@ -55,10 +57,14 @@ class _PaymentSheetState extends ConsumerState<PaymentSheet> {
       messenger.showSnackBar(
         const SnackBar(content: Text('Pembayaran berhasil! Sesi les kamu sudah aman 🎉')),
       );
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
+      String message = 'Pembayaran gagal. Coba lagi ya.';
+      if (e is DioException && e.error is ApiError) {
+        message = (e.error as ApiError).displayMessage;
+      }
       messenger.showSnackBar(
-        const SnackBar(content: Text('Pembayaran gagal. Coba lagi ya.')),
+        SnackBar(content: Text(message)),
       );
     } finally {
       if (mounted) setState(() => _loading = false);

@@ -3,13 +3,13 @@ import { z } from 'zod';
 export const createBookingBody = z.object({
   slotId: z.string(),
   subjectId: z.string(),
-  note: z.string().optional(),
+  note: z.string().nullish(),
 });
 
 export type CreateBookingBody = z.infer<typeof createBookingBody>;
 
 export const rejectBody = z.object({
-  reason: z.string().optional(),
+  reason: z.string().nullish(),
 });
 
 export type RejectBody = z.infer<typeof rejectBody>;
@@ -23,7 +23,7 @@ export type GradeBody = z.infer<typeof gradeBody>;
 
 export const reviewBody = z.object({
   rating: z.number().int().min(1).max(5),
-  comment: z.string().optional(),
+  comment: z.string().nullish(),
 });
 
 export type ReviewBody = z.infer<typeof reviewBody>;

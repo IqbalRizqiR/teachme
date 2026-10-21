@@ -16,7 +16,7 @@ export const searchTutorsQuery = z.object({
 export type SearchTutorsQuery = z.infer<typeof searchTutorsQuery>;
 
 export const updateProfileBody = z.object({
-  bio: z.string().optional(),
+  bio: z.string().nullish(),
   subjects: z
     .array(
       z.object({

@@ -45,7 +45,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } catch (e) {
       if (!mounted) return;
       final message = e is DioException && e.error is ApiError
-          ? (e.error as ApiError).message
+          ? (e.error as ApiError).displayMessage
           : 'Registrasi gagal. Silakan coba lagi.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
